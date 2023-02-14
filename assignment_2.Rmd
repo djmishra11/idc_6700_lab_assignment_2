@@ -1,0 +1,566 @@
+---
+title: "Lab 2 Assignment"
+author: "Dhananjay"
+date: "2023-02-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Q1. Getting and Reformatting Data
+
+The US Census website provides a data set representing many population statistics from 2010 to 2014 at the following website:
+
+[Census Pop Stats](https://www2.census.gov/programs-surveys/popest/datasets/2010-2014/state/asrh/)
+
+These data sets can be downloaded as a CSV that is readable directly in R.  Load the "sc-est2014-agesex-civ.csv" set.  Select the subset of the data corresponding to the variables POPEST2010_CIV through POPEST2014_CIV for Florida and Alabama (hint:  filter, slice, subset), then reformat that data so it easier to visualize (hint:  melt), and finally provide a line plot with two trends showing the number of births over all the years in the 2010-2014 period for Florida and Alabama.
+
+
+```{r}
+
+# Loading the required library
+library(tidyverse)
+library(reshape)
+library(reshape2)
+library(ggplot2)
+
+# Reading the data
+censusData <-  read.csv("sc-est2014-agesex-civ.csv", header = TRUE, sep = ',')
+# summary(censusData)
+# head(censusData)
+
+# Filtering the data for Florida (FL) and Alabama (AL) state
+# Alabama denoted by STATE = 1 and Florida denoted by STATE = 12 in the dataset
+
+# filteredCensusData <- filter(censusData, NAME == c("Alabama", "Florida"))
+filteredCensusData <- censusData[censusData$NAME %in% c("Florida", "Alabama"), ]
+# print(filteredCensusData)
+
+# Focus is on the number of births (implies AGE = 0) in the dataset 
+
+birthCensusData <- filter(filteredCensusData, AGE == 0)
+print(birthCensusData)
+
+# SEX = 0 denotes Total (Male + Female), SEX = 1 (Male), SEX = 2 (Female) in the dataset
+# Selecting the data where AGE = 0 and SEX = 0 gives the no of births in a year for a specific state
+
+totalBirthCensusData <- birthCensusData[birthCensusData$AGE == 0 & birthCensusData$SEX == 0, ] 
+print(totalBirthCensusData)
+
+# Selecting subset of data corresponding to variables POPEST2010_CIV through POPEST2014_CIV
+subsetBirthCensusData <- totalBirthCensusData[, c("NAME", "POPEST2010_CIV", "POPEST2011_CIV", "POPEST2012_CIV", "POPEST2013_CIV", "POPEST2014_CIV")]
+print(subsetBirthCensusData)
+# head(subsetBirthCensusData)
+
+# Reformatting the data for easier visualization 
+reformattedBirthData <- melt(subsetBirthCensusData, na.rm = FALSE, id = "NAME")
+
+# Renaming the column names
+names(reformattedBirthData) <- c("State", "Year", "Population")
+
+# Displaying the reformatted data
+print(reformattedBirthData)
+
+# Plotting the data
+ggplot(reformattedBirthData, aes(x = Year, y = Population, color = State)) + 
+  geom_line(aes(group = State)) +
+  geom_point() +
+  #coord_flip() +
+  xlab("Year") + 
+  ylab("Population") +
+  ggtitle("Number of Births for Florida and Alabama over year 2010-2014")
+
+```
+
+Compare this to more recent data [sc-est2021-agesex-civ.csv](https://www2.census.gov/programs-surveys/popest/datasets/2020-2021/state/asrh/)
+
+Pick the most recent year, and plot all the states - highlight FL.
+(Show this plot 2 different ways - compare and contrast which is the best way to display the data.)
+
+Answer: The plot generated is a bar chart. This plot will be shown in two different ways i.e, horizonatlly and vertically.
+
+The first plot shows the vertical bar chart.
+
+```{r echo=FALSE}
+
+# Loading the required library
+library(tidyverse)
+library(dplyr)
+library(reshape)
+library(reshape2)
+library(ggplot2)
+library(gcookbook)
+library(RColorBrewer)
+library(plotly)
+
+# Reading the data
+censusData <-  read.csv("sc-est2014-agesex-civ.csv", header = TRUE, sep = ',')
+# summary(censusData)
+# head(censusData)
+
+# Filtering the data by keeping only states (i.e., removing United States)
+
+filteredCensusData <- censusData[censusData$NAME != "United States", ]
+#print(filteredCensusData)
+
+# Focus is on the number of births (implies AGE = 0) in the dataset 
+
+birthCensusData <- filter(filteredCensusData, AGE == 0)
+print(birthCensusData)
+
+# SEX = 0 denotes Total (Male + Female), SEX = 1 (Male), SEX = 2 (Female) in the dataset
+# Selecting the data where AGE = 0 and SEX = 0 gives the no of births in a year for a specific state
+
+totalBirthCensusData <- birthCensusData[birthCensusData$AGE == 0 & birthCensusData$SEX == 0, ] 
+print(totalBirthCensusData)
+
+# Picking the recent-most years
+# Selecting subset of data corresponding to variables POPEST2013_CIV and POPEST2014_CIV
+subsetBirthCensusData <- totalBirthCensusData[, c("NAME", "POPEST2013_CIV", "POPEST2014_CIV")]
+print(subsetBirthCensusData)
+# head(subsetBirthCensusData)
+
+# Reformatting the data for easier visualization 
+reformattedBirthData <- melt(subsetBirthCensusData, na.rm = FALSE, id = "NAME")
+
+# Renaming the column names
+names(reformattedBirthData) <- c("State", "Year", "Population")
+
+# Displaying the reformatted data
+# print(reformattedBirthData)
+
+# Reading the data
+recentCensusData <-  read.csv("sc-est2021-agesex-civ.csv", header = TRUE, sep = ',')
+# summary(recentCensusData)
+# head(recentCensusData)
+
+# Filtering the data by keeping only states (i.e., removing United States)
+
+recentFilteredCensusData <- recentCensusData[recentCensusData$NAME != "United States", ]
+#print(recentFilteredCensusData)
+
+# Focus is on the number of births (implies AGE = 0) in the dataset 
+
+recentBirthCensusData <- filter(recentFilteredCensusData, AGE == 0)
+print(recentBirthCensusData)
+
+# SEX = 0 denotes Total (Male + Female), SEX = 1 (Male), SEX = 2 (Female) in the dataset
+# Selecting the data where AGE = 0 and SEX = 0 gives the no of births in a year for a specific state
+
+recentTotalBirthCensusData <- recentBirthCensusData[recentBirthCensusData$AGE == 0 & recentBirthCensusData$SEX == 0, ] 
+print(recentTotalBirthCensusData)
+
+# Selecting subset of data corresponding to most recent year (i.e., variable POPEST2021_CIV)
+recentSubsetBirthCensusData <- recentTotalBirthCensusData[, c("NAME", "POPEST2021_CIV")]
+print(recentSubsetBirthCensusData)
+# head(recentSubsetBirthCensusData)
+
+# Reformatting the data for easier visualization 
+recentReformattedBirthData <- melt(recentSubsetBirthCensusData, na.rm = FALSE, id = "NAME")
+
+# Renaming the column names
+names(recentReformattedBirthData) <- c("State", "Year", "Population")
+
+# Displaying the reformatted data
+print(recentReformattedBirthData)
+
+# Merging two data frames
+mergedBirthData <- merge(subsetBirthCensusData, recentSubsetBirthCensusData)
+print(mergedBirthData)
+
+# Reformatting the data for easier visualization 
+reformattedMergedBirthData <- melt(mergedBirthData, na.rm = FALSE, id = "NAME")
+
+# Renaming the column names
+names(reformattedMergedBirthData) <- c("State", "Year", "Population")
+
+# Displaying the reformatted data
+print(reformattedMergedBirthData)
+
+# Plotting the data and highlighting Florida
+ggplot(reformattedMergedBirthData, aes(x = reorder(State, Population), y = Population, fill = ifelse(State == "Florida", "Florida", "Other States"))) + 
+  geom_bar(aes(group = Year), stat = "identity", position = "dodge") +
+  #coord_flip() +
+  xlab("State") + 
+  ylab("Population") +
+  ggtitle("Number of Births in US states (Florida Highlighted)") +
+  scale_fill_manual(values = c("Florida" = "red", "Other States" = "grey"))
+
+```
+
+The second plot shows the horizontal bar chart.
+
+```{r echo=FALSE}
+
+# Loading the required library
+library(tidyverse)
+library(dplyr)
+library(reshape)
+library(reshape2)
+library(ggplot2)
+library(gcookbook)
+library(RColorBrewer)
+library(plotly)
+
+# Reading the data
+censusData <-  read.csv("sc-est2014-agesex-civ.csv", header = TRUE, sep = ',')
+# summary(censusData)
+# head(censusData)
+
+# Filtering the data by keeping only states (i.e., removing United States)
+
+filteredCensusData <- censusData[censusData$NAME != "United States", ]
+#print(filteredCensusData)
+
+# Focus is on the number of births (implies AGE = 0) in the dataset 
+
+birthCensusData <- filter(filteredCensusData, AGE == 0)
+print(birthCensusData)
+
+# SEX = 0 denotes Total (Male + Female), SEX = 1 (Male), SEX = 2 (Female) in the dataset
+# Selecting the data where AGE = 0 and SEX = 0 gives the no of births in a year for a specific state
+
+totalBirthCensusData <- birthCensusData[birthCensusData$AGE == 0 & birthCensusData$SEX == 0, ] 
+print(totalBirthCensusData)
+
+# Picking the recent-most years
+# Selecting subset of data corresponding to variables POPEST2013_CIV and POPEST2014_CIV
+subsetBirthCensusData <- totalBirthCensusData[, c("NAME", "POPEST2013_CIV", "POPEST2014_CIV")]
+print(subsetBirthCensusData)
+# head(subsetBirthCensusData)
+
+# Reformatting the data for easier visualization 
+reformattedBirthData <- melt(subsetBirthCensusData, na.rm = FALSE, id = "NAME")
+
+# Renaming the column names
+names(reformattedBirthData) <- c("State", "Year", "Population")
+
+# Displaying the reformatted data
+# print(reformattedBirthData)
+
+# Reading the data
+recentCensusData <-  read.csv("sc-est2021-agesex-civ.csv", header = TRUE, sep = ',')
+# summary(recentCensusData)
+# head(recentCensusData)
+
+# Filtering the data by keeping only states (i.e., removing United States)
+
+recentFilteredCensusData <- recentCensusData[recentCensusData$NAME != "United States", ]
+#print(recentFilteredCensusData)
+
+# Focus is on the number of births (implies AGE = 0) in the dataset 
+
+recentBirthCensusData <- filter(recentFilteredCensusData, AGE == 0)
+print(recentBirthCensusData)
+
+# SEX = 0 denotes Total (Male + Female), SEX = 1 (Male), SEX = 2 (Female) in the dataset
+# Selecting the data where AGE = 0 and SEX = 0 gives the no of births in a year for a specific state
+
+recentTotalBirthCensusData <- recentBirthCensusData[recentBirthCensusData$AGE == 0 & recentBirthCensusData$SEX == 0, ] 
+print(recentTotalBirthCensusData)
+
+# Selecting subset of data corresponding to most recent year (i.e., variable POPEST2021_CIV)
+recentSubsetBirthCensusData <- recentTotalBirthCensusData[, c("NAME", "POPEST2021_CIV")]
+print(recentSubsetBirthCensusData)
+# head(recentSubsetBirthCensusData)
+
+# Reformatting the data for easier visualization 
+recentReformattedBirthData <- melt(recentSubsetBirthCensusData, na.rm = FALSE, id = "NAME")
+
+# Renaming the column names
+names(recentReformattedBirthData) <- c("State", "Year", "Population")
+
+# Displaying the reformatted data
+print(recentReformattedBirthData)
+
+# Merging two data frames
+mergedBirthData <- merge(subsetBirthCensusData, recentSubsetBirthCensusData)
+print(mergedBirthData)
+
+# Reformatting the data for easier visualization 
+reformattedMergedBirthData <- melt(mergedBirthData, na.rm = FALSE, id = "NAME")
+
+# Renaming the column names
+names(reformattedMergedBirthData) <- c("State", "Year", "Population")
+
+# Displaying the reformatted data
+print(reformattedMergedBirthData)
+
+# Plotting the data and highlighting Florida
+ggplot(reformattedMergedBirthData, aes(x = reorder(State, Population), y = Population, fill = ifelse(State == "Florida", "Florida", "Other States"))) + 
+  geom_bar(aes(group = Year), stat = "identity", position = "dodge") +
+  coord_flip() +
+  xlab("State") + 
+  ylab("Population") +
+  ggtitle("Number of Births in US states (Florida Highlighted)") +
+  scale_fill_manual(values = c("Florida" = "red", "Other States" = "grey"))
+
+```
+
+
+From the above two plots, we can conclude that the vertical bar plot comparatively is a better way to display the above data as the state labels are visible and is fairly readable. On the other hand, even though the legend for State is messed up in the horizontal bar plot, the advantage is that the individual bar plots for each state is more clearer and fair to read and observe compared to the vertical bar plot.
+ 
+## Q2.  Data Munging
+
+I ran an simple evolutionary algorithm (EA) optimization method on five different instances of a binary knapsack problem.  Since EAs are stochastic, for each instance I ran 10 independent trials.  For each trial and each distinct problem instance, I reported the best solution found (the highest value of items that fit into the knapsack for that problem).  You can find this data set at the following location:
+
+knapsack-data.csv
+
+Take this data set compute the mean and standard deviation across all the trials for each problem instance (hint:  group_by, summarize), then produce a point and whisker plot where the points position represents the mean and the whisker length represents the standard deviation.
+
+```{r}
+
+# Loading the required library
+library(ggplot2)
+
+# Reading the data
+knapsackData <-  read.csv("knapsack-data.csv", header = TRUE, sep = ',')
+# summary(knapsackData)
+# head(knapsackData)
+
+# Grouping the data 
+groupName <- group_by(knapsackData, ProblemInstance)
+#print(groupName)
+
+# Summarizing the data and computing mean and standard deviation (SD) for each group
+summaryKnapsackData <- summarise(groupName, meanResult = mean(BestSolution), sdResult = sd(BestSolution))
+
+# Displaying the mean and sd for each problem instance
+print(summaryKnapsackData)
+
+# Plotting the results in point and whisker plot where
+# The Points represents the mean and Whisker length represents SD
+
+ggplot(summaryKnapsackData, aes(x=ProblemInstance, y=meanResult)) +
+  geom_point(shape = 21, size = 10, fill = "black") +
+  geom_errorbar(aes(ymin = meanResult - sdResult/2 , ymax = meanResult + sdResult/2), width=0.4, linewidth = 0.75) +
+  xlab("Problem Instances") +
+  ylab("Mean of Best Solution Obtained") +
+  ggtitle("Point and Whisker Plot of Problem Instances for Binary Knapsack Problem")
+
+```
+
+## Q3. Plot golfers data
+
+Consider the following dataset about PGA golfers in 2004:
+
+pga2004.csv
+
+Find a way to plot the following variables:  winnings,  and three of the following variables:  avedrv, drvacc, grnreg, aveputt, savepct, or events.  Explain why you chose those variables and why you chose the encodings your picked for each variable.
+
+Answer: A scatter plot will provide us with an effective visualization for the PGA golfers dataset. 
+
+There are various factors (avedrv, drvacc, grnreg, aveputt, savepct, or events) which impacts the performance of the golfers eventually affecting their winnings. I have selected to plot the 'winnings' variable against the variables (avedrv, aveputt, and drvacc). These variables which gives average drive distance (avedrv), average putts per round (aveputt), and driving accuracy percentage (drvacc) are essential factors that impact a golfer's performance affecting winnings. Thus, I have selected these variables.
+
+The winnings will be displayed on the Y-Axis and the avedrv, aveputt, and drvacc displayed on X-axis. The color palate is defined by the avedrv variable and the size of the points in the scatter plot is defined by the aveputt variable. It helps for subtle comparison of the values for each golfer and also provides us with insights on correlation between the variables.
+
+
+
+```{r}
+
+# Loading the required library
+library(ggplot2)
+
+# Reading the data
+golfersData <-  read.csv("pga2004.csv", header = TRUE, sep = ',')
+#summary(golfersData)
+#head(golfersData)
+
+# Selecting subset of data corresponding to variables winnings, avedrv, aveputt, drvacc
+subsetGolfersData <- golfersData[, c("golfer", "winnings", "avedrv", "aveputt", "drvacc")]
+#print(subsetGolfersData)
+#head(subsetGolfersData)
+
+# Plotting the winnings against selected variables using Scatter plot
+ggplot(subsetGolfersData, aes(x = drvacc, y = winnings, color = avedrv, size = aveputt)) +
+  geom_point() +
+  scale_color_gradient(low = "red", high = "blue") +
+  scale_size_continuous(range = c(2, 10)) +
+  labs(x = "Driving Accuracy Percentage",
+       y = "Winnings",
+       color = "Average Drive Distance",
+       size = "Average Putts per Round", 
+       title = "Scatter Plot of PGA 2004 Golfers Dataset") 
+
+```
+ 
+
+## Q4. Modeling Data
+
+Consider again the 2004 PGA golfers data from question #3.  Construct a standard linear model for predicting the winnings response variable from the following explanatory variables:  avedrv, drvacc, grnreg, aveputt, savepct, and events.  Construct a second model of some sort for the same variables.  Compare these two fits quantitatively and tell which is better.
+
+```{r}
+# R code to construct a standard linear model for predicting the winnings response variable from the following explanatory variables:  avedrv, drvacc, grnreg, aveputt, savepct, and events
+
+# Loading the dataset
+golfersData <-  read.csv("pga2004.csv", header = TRUE, sep = ',')
+#summary(golfersData)
+#head(golfersData)
+
+# Fitting a standard linear model
+fitLinearModel <- lm(data = golfersData, formula = (winnings ~ avedrv + drvacc + grnreg + aveputt + savepct + events ))
+
+# Summary of the generated model
+summary(fitLinearModel)
+
+```
+
+
+```{r}
+# R code to construct a standard linear model and a generalised linear model  for predicting the winnings response variable from the following explanatory variables:  avedrv, drvacc, grnreg, aveputt, savepct, and events 
+
+# Loading the dataset
+golfersData <-  read.csv("pga2004.csv", header = TRUE, sep = ',')
+#summary(golfersData)
+#head(golfersData)
+
+# Fitting a standard linear model
+fitLinearModel <- lm(data = golfersData, formula = (winnings ~ avedrv + drvacc + grnreg + aveputt + savepct + events ))
+
+# Fitting a generalised linear model
+generalisedLinearModel <- glm(data = golfersData, formula = (winnings ~ avedrv + drvacc + grnreg + aveputt + savepct + events ), family = Gamma(link="inverse"))
+
+# Summary of the generated model
+summary(fitLinearModel)
+summary(generalisedLinearModel)
+
+```
+
+
+```{r}
+# R code to construct a standard linear model and a generalised linear model  for predicting the winnings response variable from the following explanatory variables:  avedrv, drvacc, grnreg, aveputt, savepct, and events and comparing the two generated fitting models quantitatively.
+
+# Loading the dataset
+golfersData <-  read.csv("pga2004.csv", header = TRUE, sep = ',')
+#summary(golfersData)
+#head(golfersData)
+
+# Fitting a standard linear model
+fitLinearModel <- lm(data = golfersData, formula = (winnings ~ avedrv + drvacc + grnreg + aveputt + savepct + events ))
+
+# Fitting a generalised linear model
+generalisedLinearModel <- glm(data = golfersData, formula = (winnings ~ avedrv + drvacc + grnreg + aveputt + savepct + events ), family = Gamma(link="inverse"))
+
+# Summary of the generated model
+#summary(fitLinearModel)
+#summary(generalisedLinearModel)
+
+# Computing R-squared value for the standard linear model
+rSquareLinearModel <- summary(fitLinearModel)$r.squared
+
+# Computing R-squared value for the generalized linear model
+rSquareGeneralisedModel <- summary(generalisedLinearModel)$r.squared
+
+# Computing AIC value for the standard linear model
+aicLinearModel <- AIC(fitLinearModel)
+
+# Computing AIC value for the generalized linear model
+aicGeneralisedModel <- AIC(generalisedLinearModel)
+
+# Displaying the obtained values 
+#print(rSquareLinearModel)
+#print(rSquareGeneralisedModel)
+print("AIC of standard linear model:")
+print(aicLinearModel)
+print("AIC of generalised linear model:")
+print(aicGeneralisedModel)
+
+```
+The generated models can be compared by computing R-squared and AIC values. A lower value of AIC indicates a better model. From above we obtained the AIC of standard linear model = 4491.182 and AIC of generalised linear model = 4309.721, thus the generalised linear model is a better fit model as the AIC value is low compared to the standard linear model for the above dataset.
+
+## Q5. Predicting from your model
+
+Now consider the following dataset, which consists of three additional golfers not in set on which you made your model fits.
+
+pga2004b.csv 
+
+Use your two models from question #4 to make predictions of the winnings in the new data set.  Compare these to the actual winnings.  Which is the better predictor.
+
+```{r}
+# R code to make predictions of the winnings in the new data set using the standard linear model generated in Q4
+
+# Loading the dataset
+golfersData <-  read.csv("pga2004.csv", header = TRUE, sep = ',')
+#summary(golfersData)
+#head(golfersData)
+
+# Fitting a standard linear model
+fitLinearModel <- lm(data = golfersData, formula = (winnings ~ avedrv + drvacc + grnreg + aveputt + savepct + events ))
+
+# Summary of the generated model
+#summary(fitLinearModel)
+
+# Loading the new dataset
+newGolfersData <-  read.csv("pga2004b.csv", header = TRUE, sep = ',')
+#summary(newGolfersData)
+#head(newGolfersData)
+
+# Making predictions using the standard linear model
+newGolfersData$winnings <- predict(fitLinearModel, newdata = newGolfersData)
+
+# Displaying the result
+print(newGolfersData)
+
+# Loading the original new dataset
+originalNewGolfersData <-  read.csv("pga2004b.csv", header = TRUE, sep = ',')
+
+# Comparing the predicted winnings to real winnings
+result = newGolfersData$winnings - originalNewGolfersData$winnings
+
+# Displaying the difference between predicted and real winnings
+print(result)
+
+# Mean squared error for the standard linear model
+mseLinearModel <- mean((result)^2)
+
+print(mseLinearModel)
+
+```
+
+```{r}
+# R code to make predictions of the winnings in the new data set using the  generalised linear model generated in Q4
+
+# Loading the dataset
+golfersData <-  read.csv("pga2004.csv", header = TRUE, sep = ',')
+#summary(golfersData)
+#head(golfersData)
+
+# Fitting a generalised linear model
+generalisedLinearModel <- glm(data = golfersData, formula = (winnings ~ avedrv + drvacc + grnreg + aveputt + savepct + events ), family = Gamma(link="inverse"))
+
+# Summary of the generated model
+#summary(generalisedLinearModel)
+
+# Loading the new dataset
+newGolfersData <-  read.csv("pga2004b.csv", header = TRUE, sep = ',')
+#summary(newGolfersData)
+#head(newGolfersData)
+
+# Make predictions using the generalized linear model
+newGolfersData$winnings <- predict(generalisedLinearModel, newdata = newGolfersData)
+
+# Displaying the result
+print(newGolfersData)
+
+# Loading the original new dataset
+originalNewGolfersData <-  read.csv("pga2004b.csv", header = TRUE, sep = ',')
+
+# Comparing the predicted winnings to real winnings
+result = newGolfersData$winnings - originalNewGolfersData$winnings
+
+# Displaying the difference between predicted and real winnings
+print(result)
+
+# Mean squared error for the generalised linear model
+mseGeneralisedModel <- mean((result)^2)
+
+print(mseGeneralisedModel)
+
+```
+
+
+
+The two models can be compared using mean squared error (MSE). From above results, we can conclude that the better predictor is Generalised Linear Model as the MSE value is lower than compared to the MSE value of the standard Linear model.
+
